@@ -14,7 +14,7 @@ const height = 44;
 const backgroundASCIICode = '.';
 const distanceFromCam = 100;
 const K1 = 40;
-const incrementSpeed = 0.6;
+const incrementSpeed = 0.4;
 
 // Buffers
 let zBuffer = new Float32Array(width * height);
@@ -80,19 +80,51 @@ function calculateForSurface(cubeX, cubeY, cubeZ, cubeWidth, ch) {
 }
 
 /**
+ * Render the 12 edges of a cube for sharp definition
+ */
+function renderEdges(cubeWidth) {
+  const edgeChar = '#';
+  const step = 0.2;
+  
+  for (let t = -cubeWidth; t <= cubeWidth; t += step) {
+    // 4 edges along X axis
+    calculateForSurface(t, -cubeWidth, -cubeWidth, cubeWidth, edgeChar);
+    calculateForSurface(t, cubeWidth, -cubeWidth, cubeWidth, edgeChar);
+    calculateForSurface(t, -cubeWidth, cubeWidth, cubeWidth, edgeChar);
+    calculateForSurface(t, cubeWidth, cubeWidth, cubeWidth, edgeChar);
+    
+    // 4 edges along Y axis
+    calculateForSurface(-cubeWidth, t, -cubeWidth, cubeWidth, edgeChar);
+    calculateForSurface(cubeWidth, t, -cubeWidth, cubeWidth, edgeChar);
+    calculateForSurface(-cubeWidth, t, cubeWidth, cubeWidth, edgeChar);
+    calculateForSurface(cubeWidth, t, cubeWidth, cubeWidth, edgeChar);
+    
+    // 4 edges along Z axis
+    calculateForSurface(-cubeWidth, -cubeWidth, t, cubeWidth, edgeChar);
+    calculateForSurface(cubeWidth, -cubeWidth, t, cubeWidth, edgeChar);
+    calculateForSurface(-cubeWidth, cubeWidth, t, cubeWidth, edgeChar);
+    calculateForSurface(cubeWidth, cubeWidth, t, cubeWidth, edgeChar);
+  }
+}
+
+/**
  * Render a single cube at the current horizontal offset
  */
 function renderCube(cubeWidth) {
+  // Draw faces first
   for (let cubeX = -cubeWidth; cubeX < cubeWidth; cubeX += incrementSpeed) {
     for (let cubeY = -cubeWidth; cubeY < cubeWidth; cubeY += incrementSpeed) {
-      calculateForSurface(cubeX, cubeY, -cubeWidth, cubeWidth, '@');
-      calculateForSurface(cubeWidth, cubeY, cubeX, cubeWidth, '$');
-      calculateForSurface(-cubeWidth, cubeY, -cubeX, cubeWidth, '~');
-      calculateForSurface(-cubeX, cubeY, cubeWidth, cubeWidth, '#');
-      calculateForSurface(cubeX, -cubeWidth, -cubeY, cubeWidth, ';');
+      calculateForSurface(cubeX, cubeY, -cubeWidth, cubeWidth, '.');
+      calculateForSurface(cubeWidth, cubeY, cubeX, cubeWidth, 'o');
+      calculateForSurface(-cubeWidth, cubeY, -cubeX, cubeWidth, ':');
+      calculateForSurface(-cubeX, cubeY, cubeWidth, cubeWidth, '*');
+      calculateForSurface(cubeX, -cubeWidth, -cubeY, cubeWidth, '-');
       calculateForSurface(cubeX, cubeWidth, cubeY, cubeWidth, '+');
     }
   }
+  
+  // Draw edges on top
+  renderEdges(cubeWidth);
 }
 
 /**
