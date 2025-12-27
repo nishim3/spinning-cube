@@ -1,0 +1,13 @@
+{
+  "name": "spinning-cube",
+  "version": "1.0.0",
+  "description": "ASCII spinning cubes animation",
+  "main": "index.js",
+  "scripts": {
+    "start": "npx serve .",
+    "terminal": "node index.js"
+  },
+  "keywords": ["ascii", "animation", "terminal", "cube", "3d"],
+  "license": "MIT"
+}
+

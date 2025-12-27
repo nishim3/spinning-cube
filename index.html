@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spinning Cubes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #12121a;
+      --accent-cyan: #00fff2;
+      --accent-magenta: #ff00e4;
+      --accent-yellow: #ffe600;
+      --text-dim: #3a3a4a;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg-primary);
+      background-image: 
+        radial-gradient(ellipse at 20% 80%, rgba(0, 255, 242, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(255, 0, 228, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(255, 230, 0, 0.03) 0%, transparent 70%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      overflow: hidden;
+    }
+
+    .container {
+      position: relative;
+      padding: 2rem;
+    }
+
+    .glow-border {
+      position: absolute;
+      inset: 0;
+      border-radius: 16px;
+      padding: 2px;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-magenta), var(--accent-yellow));
+      -webkit-mask: 
+        linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+      mask: 
+        linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      opacity: 0.6;
+      animation: borderPulse 4s ease-in-out infinite;
+    }
+
+    @keyframes borderPulse {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 0.8; }
+    }
+
+    .display-wrapper {
+      background: var(--bg-secondary);
+      border-radius: 14px;
+      padding: 1.5rem 2rem;
+      position: relative;
+      box-shadow: 
+        0 0 60px rgba(0, 255, 242, 0.1),
+        0 0 100px rgba(255, 0, 228, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .dot.red { background: #ff5f57; }
+    .dot.yellow { background: #febc2e; }
+    .dot.green { background: #28c840; }
+
+    .title {
+      margin-left: auto;
+      color: var(--text-dim);
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    #canvas {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      line-height: 1.1;
+      letter-spacing: 0.05em;
+      white-space: pre;
+      color: var(--cube-color, var(--accent-cyan));
+      text-shadow: 
+        0 0 10px currentColor,
+        0 0 20px currentColor;
+      transition: color 0.3s ease;
+    }
+
+    .controls {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .color-picker {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      padding: 0.5rem 0.75rem;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .color-label {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .color-swatch {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .color-swatch:hover {
+      transform: scale(1.15);
+      box-shadow: 0 0 12px currentColor;
+    }
+
+    .color-swatch.active {
+      border-color: white;
+      box-shadow: 0 0 15px currentColor;
+    }
+
+    .color-swatch.cyan { background: #00fff2; color: #00fff2; }
+    .color-swatch.magenta { background: #ff00e4; color: #ff00e4; }
+    .color-swatch.yellow { background: #ffe600; color: #ffe600; }
+    .color-swatch.green { background: #39ff14; color: #39ff14; }
+    .color-swatch.orange { background: #ff6b35; color: #ff6b35; }
+    .color-swatch.white { background: #ffffff; color: #ffffff; }
+
+    button {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      padding: 0.6rem 1.4rem;
+      border: 1px solid var(--accent-cyan);
+      background: transparent;
+      color: var(--accent-cyan);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    button:hover {
+      background: var(--accent-cyan);
+      color: var(--bg-primary);
+      box-shadow: 0 0 20px rgba(0, 255, 242, 0.4);
+    }
+
+    button.active {
+      background: var(--accent-magenta);
+      border-color: var(--accent-magenta);
+      color: white;
+    }
+
+    .stats {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      text-align: right;
+    }
+
+    .scanlines {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.1) 2px,
+        rgba(0, 0, 0, 0.1) 4px
+      );
+      z-index: 100;
+    }
+  </style>
+</head>
+<body>
+  <div class="scanlines"></div>
+  
+  <div class="container">
+    <div class="glow-border"></div>
+    <div class="display-wrapper">
+      <div class="header">
+        <div class="dot red"></div>
+        <div class="dot yellow"></div>
+        <div class="dot green"></div>
+        <span class="title">spinning-cubes.exe</span>
+      </div>
+      <pre id="canvas"></pre>
+      <div class="controls">
+        <button id="pauseBtn">Pause</button>
+        <button id="resetBtn">Reset</button>
+        <div class="color-picker">
+          <span class="color-label">Color</span>
+          <div class="color-swatch cyan active" data-color="#00fff2"></div>
+          <div class="color-swatch magenta" data-color="#ff00e4"></div>
+          <div class="color-swatch yellow" data-color="#ffe600"></div>
+          <div class="color-swatch green" data-color="#39ff14"></div>
+          <div class="color-swatch orange" data-color="#ff6b35"></div>
+          <div class="color-swatch white" data-color="#ffffff"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div>FPS: <span id="fps">0</span></div>
+    <div>Frame: <span id="frame">0</span></div>
+  </div>
+
+  <script>
+    // Rotation angles
+    let A = 0;
+    let B = 0;
+    let C = 0;
+
+    // Display configuration
+    const width = 120;
+    const height = 40;
+    const backgroundASCIICode = ' ';
+    const distanceFromCam = 100;
+    const K1 = 40;
+    const incrementSpeed = 0.6;
+
+    // Buffers
+    let zBuffer = new Float32Array(width * height);
+    let buffer = new Array(width * height);
+
+    // Horizontal offset for positioning cubes
+    let horizontalOffset = 0;
+
+    // Animation state
+    let isPaused = false;
+    let frameCount = 0;
+    let lastTime = performance.now();
+    let fps = 0;
+
+    // Character colors for each face
+    const faceChars = ['@', '$', '~', '#', ';', '+'];
+
+    /**
+     * Calculate X coordinate after 3D rotation
+     */
+    function calculateX(i, j, k) {
+      return (
+        j * Math.sin(A) * Math.sin(B) * Math.cos(C) -
+        k * Math.cos(A) * Math.sin(B) * Math.cos(C) +
+        j * Math.cos(A) * Math.sin(C) +
+        k * Math.sin(A) * Math.sin(C) +
+        i * Math.cos(B) * Math.cos(C)
+      );
+    }
+
+    /**
+     * Calculate Y coordinate after 3D rotation
+     */
+    function calculateY(i, j, k) {
+      return (
+        j * Math.cos(A) * Math.cos(C) +
+        k * Math.sin(A) * Math.cos(C) -
+        j * Math.sin(A) * Math.sin(B) * Math.sin(C) +
+        k * Math.cos(A) * Math.sin(B) * Math.sin(C) -
+        i * Math.cos(B) * Math.sin(C)
+      );
+    }
+
+    /**
+     * Calculate Z coordinate after 3D rotation
+     */
+    function calculateZ(i, j, k) {
+      return k * Math.cos(A) * Math.cos(B) - j * Math.sin(A) * Math.cos(B) + i * Math.sin(B);
+    }
+
+    /**
+     * Calculate and render a point on a cube surface
+     */
+    function calculateForSurface(cubeX, cubeY, cubeZ, cubeWidth, ch) {
+      const x = calculateX(cubeX, cubeY, cubeZ);
+      const y = calculateY(cubeX, cubeY, cubeZ);
+      const z = calculateZ(cubeX, cubeY, cubeZ) + distanceFromCam;
+
+      const ooz = 1 / z;
+
+      const xp = Math.floor(width / 2 + horizontalOffset + K1 * ooz * x * 2);
+      const yp = Math.floor(height / 2 + K1 * ooz * y);
+
+      const idx = xp + yp * width;
+
+      if (idx >= 0 && idx < width * height && xp >= 0 && xp < width) {
+        if (ooz > zBuffer[idx]) {
+          zBuffer[idx] = ooz;
+          buffer[idx] = ch;
+        }
+      }
+    }
+
+    /**
+     * Render a single cube at the current horizontal offset
+     */
+    function renderCube(cubeWidth) {
+      for (let cubeX = -cubeWidth; cubeX < cubeWidth; cubeX += incrementSpeed) {
+        for (let cubeY = -cubeWidth; cubeY < cubeWidth; cubeY += incrementSpeed) {
+          calculateForSurface(cubeX, cubeY, -cubeWidth, cubeWidth, '@');
+          calculateForSurface(cubeWidth, cubeY, cubeX, cubeWidth, '$');
+          calculateForSurface(-cubeWidth, cubeY, -cubeX, cubeWidth, '~');
+          calculateForSurface(-cubeX, cubeY, cubeWidth, cubeWidth, '#');
+          calculateForSurface(cubeX, -cubeWidth, -cubeY, cubeWidth, ';');
+          calculateForSurface(cubeX, cubeWidth, cubeY, cubeWidth, '+');
+        }
+      }
+    }
+
+    /**
+     * Main render function
+     */
+    function render() {
+      // Clear buffers
+      buffer.fill(backgroundASCIICode);
+      zBuffer.fill(0);
+
+      // Single centered cube
+      let cubeWidth = 20;
+      horizontalOffset = 0;
+      renderCube(cubeWidth);
+
+      // Build output string
+      let output = '';
+      for (let k = 0; k < width * height; k++) {
+        output += k % width === width - 1 ? buffer[k] + '\n' : buffer[k];
+      }
+
+      document.getElementById('canvas').textContent = output;
+
+      // Update rotation angles
+      A += 0.05;
+      B += 0.05;
+      C += 0.01;
+
+      // Update stats
+      frameCount++;
+      const now = performance.now();
+      if (now - lastTime >= 1000) {
+        fps = frameCount;
+        frameCount = 0;
+        lastTime = now;
+        document.getElementById('fps').textContent = fps;
+      }
+      document.getElementById('frame').textContent = Math.floor(A / 0.05);
+    }
+
+    /**
+     * Animation loop
+     */
+    function animate() {
+      if (!isPaused) {
+        render();
+      }
+      requestAnimationFrame(animate);
+    }
+
+    // Event listeners
+    document.getElementById('pauseBtn').addEventListener('click', (e) => {
+      isPaused = !isPaused;
+      e.target.textContent = isPaused ? 'Resume' : 'Pause';
+      e.target.classList.toggle('active', isPaused);
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      A = 0;
+      B = 0;
+      C = 0;
+    });
+
+    // Color picker
+    document.querySelectorAll('.color-swatch').forEach(swatch => {
+      swatch.addEventListener('click', (e) => {
+        document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+        e.target.classList.add('active');
+        document.documentElement.style.setProperty('--cube-color', e.target.dataset.color);
+      });
+    });
+
+    // Keyboard controls
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        document.getElementById('pauseBtn').click();
+      } else if (e.code === 'KeyR') {
+        document.getElementById('resetBtn').click();
+      }
+    });
+
+    // Start animation
+    animate();
+  </script>
+</body>
+</html>
+
