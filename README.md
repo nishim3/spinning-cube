@@ -1,7 +1,15 @@
 Try it its pretty cool
-```js
-npm i
+
+```bash
+bun install
 ```
-```js
-npm start
+
+```bash
+bun start
+```
+
+Or run the terminal version:
+
+```bash
+bun terminal
 ```

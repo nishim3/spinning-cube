@@ -4,10 +4,13 @@
   "description": "ASCII spinning cubes animation",
   "main": "index.js",
   "scripts": {
-    "start": "npx serve .",
-    "terminal": "node index.js"
+    "start": "bun run --bun serve .",
+    "terminal": "bun index.js"
   },
   "keywords": ["ascii", "animation", "terminal", "cube", "3d"],
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "serve": "^14.2.0"
+  }
 }
 
