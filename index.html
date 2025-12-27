@@ -169,6 +169,96 @@
     .color-swatch.orange { background: #ff6b35; color: #ff6b35; }
     .color-swatch.white { background: #ffffff; color: #ffffff; }
 
+    .speed-control {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      padding: 0.5rem 0.75rem;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .speed-label {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      white-space: nowrap;
+    }
+
+    .speed-value {
+      font-size: 0.7rem;
+      color: var(--accent-cyan);
+      min-width: 3ch;
+      text-align: right;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100px;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      background: var(--accent-cyan);
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 0 10px var(--accent-cyan);
+      transition: all 0.2s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+      box-shadow: 0 0 15px var(--accent-cyan);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      background: var(--accent-cyan);
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 0 10px var(--accent-cyan);
+    }
+
+    #canvas.paused {
+      opacity: 0.4;
+    }
+
+    .hover-hint {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 0.8rem;
+      color: white;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      pointer-events: none;
+      text-shadow: 0 0 10px var(--accent-cyan);
+    }
+
+    .canvas-wrapper {
+      position: relative;
+    }
+
+    #canvas:hover + .hover-hint {
+      opacity: 1;
+    }
+
     button {
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.8rem;
@@ -231,10 +321,18 @@
         <div class="dot green"></div>
         <span class="title">spinning-cubes.exe</span>
       </div>
-      <pre id="canvas"></pre>
+      <div class="canvas-wrapper">
+        <pre id="canvas"></pre>
+        <div class="hover-hint">Paused</div>
+      </div>
       <div class="controls">
         <button id="pauseBtn">Pause</button>
         <button id="resetBtn">Reset</button>
+        <div class="speed-control">
+          <span class="speed-label">Speed</span>
+          <input type="range" id="speedSlider" min="0" max="200" value="100">
+          <span class="speed-value" id="speedValue">1x</span>
+        </div>
         <div class="color-picker">
           <span class="color-label">Color</span>
           <div class="color-swatch cyan active" data-color="#00fff2"></div>
@@ -276,6 +374,8 @@
 
     // Animation state
     let isPaused = false;
+    let isHovering = false;
+    let speedMultiplier = 1;
     let frameCount = 0;
     let lastTime = performance.now();
     let fps = 0;
@@ -376,10 +476,10 @@
 
       document.getElementById('canvas').textContent = output;
 
-      // Update rotation angles
-      A += 0.05;
-      B += 0.05;
-      C += 0.01;
+      // Update rotation angles based on speed
+      A += 0.05 * speedMultiplier;
+      B += 0.05 * speedMultiplier;
+      C += 0.01 * speedMultiplier;
 
       // Update stats
       frameCount++;
@@ -397,7 +497,7 @@
      * Animation loop
      */
     function animate() {
-      if (!isPaused) {
+      if (!isPaused && !isHovering) {
         render();
       }
       requestAnimationFrame(animate);
@@ -423,6 +523,34 @@
         e.target.classList.add('active');
         document.documentElement.style.setProperty('--cube-color', e.target.dataset.color);
       });
+    });
+
+    // Speed slider
+    const speedSlider = document.getElementById('speedSlider');
+    const speedValue = document.getElementById('speedValue');
+    
+    speedSlider.addEventListener('input', (e) => {
+      speedMultiplier = e.target.value / 100;
+      if (speedMultiplier === 0) {
+        speedValue.textContent = '0x';
+      } else if (speedMultiplier < 1) {
+        speedValue.textContent = speedMultiplier.toFixed(1) + 'x';
+      } else {
+        speedValue.textContent = speedMultiplier.toFixed(0) + 'x';
+      }
+    });
+
+    // Pause on hover (only over the cube itself)
+    const canvas = document.getElementById('canvas');
+    
+    canvas.addEventListener('mouseenter', () => {
+      isHovering = true;
+      canvas.classList.add('paused');
+    });
+    
+    canvas.addEventListener('mouseleave', () => {
+      isHovering = false;
+      canvas.classList.remove('paused');
     });
 
     // Keyboard controls
