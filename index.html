@@ -181,7 +181,7 @@
 
     .speed-label {
       font-size: 0.7rem;
-      color: var(--text-dim);
+      color: #8a8aa0;
       text-transform: uppercase;
       letter-spacing: 0.1em;
       white-space: nowrap;
@@ -230,33 +230,6 @@
       cursor: pointer;
       border: none;
       box-shadow: 0 0 10px var(--accent-cyan);
-    }
-
-    #canvas.paused {
-      opacity: 0.4;
-    }
-
-    .hover-hint {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 0.8rem;
-      color: white;
-      text-transform: uppercase;
-      letter-spacing: 0.15em;
-      opacity: 0;
-      transition: opacity 0.2s ease;
-      pointer-events: none;
-      text-shadow: 0 0 10px var(--accent-cyan);
-    }
-
-    .canvas-wrapper {
-      position: relative;
-    }
-
-    #canvas:hover + .hover-hint {
-      opacity: 1;
     }
 
     button {
@@ -321,13 +294,11 @@
         <div class="dot green"></div>
         <span class="title">spinning-cubes.exe</span>
       </div>
-      <div class="canvas-wrapper">
-        <pre id="canvas"></pre>
-        <div class="hover-hint">Paused</div>
-      </div>
+      <pre id="canvas"></pre>
       <div class="controls">
         <button id="pauseBtn">Pause</button>
         <button id="resetBtn">Reset</button>
+        <button id="reverseBtn">Reverse</button>
         <div class="speed-control">
           <span class="speed-label">Speed</span>
           <input type="range" id="speedSlider" min="0" max="200" value="100">
@@ -374,8 +345,8 @@
 
     // Animation state
     let isPaused = false;
-    let isHovering = false;
     let speedMultiplier = 1;
+    let direction = 1;
     let frameCount = 0;
     let lastTime = performance.now();
     let fps = 0;
@@ -476,10 +447,10 @@
 
       document.getElementById('canvas').textContent = output;
 
-      // Update rotation angles based on speed
-      A += 0.05 * speedMultiplier;
-      B += 0.05 * speedMultiplier;
-      C += 0.01 * speedMultiplier;
+      // Update rotation angles based on speed and direction
+      A += 0.05 * speedMultiplier * direction;
+      B += 0.05 * speedMultiplier * direction;
+      C += 0.01 * speedMultiplier * direction;
 
       // Update stats
       frameCount++;
@@ -497,7 +468,7 @@
      * Animation loop
      */
     function animate() {
-      if (!isPaused && !isHovering) {
+      if (!isPaused) {
         render();
       }
       requestAnimationFrame(animate);
@@ -540,17 +511,10 @@
       }
     });
 
-    // Pause on hover (only over the cube itself)
-    const canvas = document.getElementById('canvas');
-    
-    canvas.addEventListener('mouseenter', () => {
-      isHovering = true;
-      canvas.classList.add('paused');
-    });
-    
-    canvas.addEventListener('mouseleave', () => {
-      isHovering = false;
-      canvas.classList.remove('paused');
+    // Reverse direction
+    document.getElementById('reverseBtn').addEventListener('click', (e) => {
+      direction *= -1;
+      e.target.classList.toggle('active', direction === -1);
     });
 
     // Keyboard controls
